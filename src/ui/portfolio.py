@@ -128,6 +128,6 @@ def render_portfolio(portfolio, trades, end_dt):
         else:
             st.info("Portfolio is empty.")
     else:
-        st.warning("⚠️ **Portfolio Data Missing.** Please click **'🔄 Run Simulation'** in the sidebar to generate the current holdings list.")
+        st.warning("**Portfolio Data Missing.** Please click **'Run Simulation'** in the sidebar to generate the current holdings list.")
 
     return selected_ticker, selected_name

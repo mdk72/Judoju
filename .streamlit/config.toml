@@ -1,0 +1,17 @@
+[theme]
+# Streamlit Cloud 테마 설정
+primaryColor = "#4A90E2"
+backgroundColor = "#0E1117"
+secondaryBackgroundColor = "#262730"
+textColor = "#FAFAFA"
+font = "sans serif"
+
+[server]
+# 파일 감시 비활성화 (Streamlit Cloud에서 권장)
+fileWatcherType = "none"
+# 헤더 메시지 비활성화
+headless = true
+
+[browser]
+# 브라우저 자동 열기 비활성화 (Streamlit Cloud)
+gatherUsageStats = false

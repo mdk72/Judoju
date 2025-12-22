@@ -1,16 +1,22 @@
-# Core Dependencies
-pandas
-numpy
-streamlit
-plotly
-scipy
+# Core Data Science
+pandas>=2.0.0
+numpy>=1.24.0
 
-# KIS MCP Server (Local) & MCP Tools
-fastmcp
-requests
-python-dotenv
-mcp
+# Web Framework
+streamlit>=1.28.0
+
+# Visualization
+plotly>=5.17.0
+
+# Scientific Computing
+scipy>=1.11.0
+
+# Data Source
+yfinance>=0.2.32
+
+# Utilities
+requests>=2.31.0
+python-dotenv>=1.0.0
 
 # Database
-# sqlite3 is built-in, but mcp-server-sqlite runs via npx usually. 
-# If running python based sqlite tool, add libraries here. Be safe.
+# SQLite는 Python 내장 모듈이므로 별도 설치 불필요

@@ -111,8 +111,8 @@ data/
 logs/*.csv
 logs/*.log
 
-# Streamlit
-.streamlit/
+# Streamlit (secrets만 제외, config.toml은 배포용으로 커밋 허용)
+.streamlit/secrets.toml
 static/
 
 # OS

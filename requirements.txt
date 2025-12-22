@@ -12,6 +12,7 @@ plotly>=5.17.0
 scipy>=1.11.0
 
 # Data Source
+finance-datareader>=0.9.50
 yfinance>=0.2.32
 
 # Utilities

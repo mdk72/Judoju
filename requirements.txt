@@ -1,0 +1,16 @@
+# Core Dependencies
+pandas
+numpy
+streamlit
+plotly
+scipy
+
+# KIS MCP Server (Local) & MCP Tools
+fastmcp
+requests
+python-dotenv
+mcp
+
+# Database
+# sqlite3 is built-in, but mcp-server-sqlite runs via npx usually. 
+# If running python based sqlite tool, add libraries here. Be safe.

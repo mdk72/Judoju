@@ -1,0 +1,17 @@
+{
+    "ma_short": 20,
+    "ma_long": 60,
+    "sell_slope_mult": 1.3,
+    "weights": [
+        0.25,
+        0.25,
+        0.25,
+        0.25
+    ],
+    "start_date": "2017-01-02",
+    "end_date": "2025-12-22",
+    "kospi_n": 50,
+    "kosdaq_n": 10,
+    "slope_lookback": 60,
+    "use_trend_break": false
+}

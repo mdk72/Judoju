@@ -58,14 +58,17 @@ def render_analysis(trades, portfolio, start_dt, end_dt, strategy_params, select
             st.session_state.last_table_selection = current_table_selection
             
         # Selectbox with key 'stock_selector'
-        default_index = 0
-        if 'stock_selector' in st.session_state and st.session_state.stock_selector in ticker_options:
-            default_index = ticker_options.index(st.session_state.stock_selector)
+        # Initialize session state BEFORE widget creation (if not exists)
+        if 'stock_selector' not in st.session_state:
+            st.session_state.stock_selector = ticker_options[0] if ticker_options else None
+        
+        # Ensure current value is valid
+        if st.session_state.stock_selector not in ticker_options and ticker_options:
+            st.session_state.stock_selector = ticker_options[0]
         
         selected_option = st.selectbox(
             "Select Traded Stock", 
             ticker_options, 
-            index=default_index,
             key="stock_selector"
         )
         

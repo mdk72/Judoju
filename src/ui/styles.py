@@ -60,7 +60,7 @@ def apply_styles():
         font-family: 'Roboto Mono', monospace;
         font-size: 1.5rem; /* Smaller Value */
         font-weight: 700;
-        color: #212529;
+        color: #495057; /* 진한 회색으로 변경 */
     }
 
     .metric-sub {
@@ -87,6 +87,37 @@ def apply_styles():
     section[data-testid="stSidebar"] {
         background-color: #FFFFFF;
         border-right: 1px solid #E9ECEF;
+    }
+    
+    /* 모든 버튼 스타일 통일 */
+    .stButton > button,
+    .stFormSubmitButton > button,
+    button[kind="primary"],
+    button[kind="primaryFormSubmit"] {
+        background-color: #FFFFFF !important;
+        color: #495057 !important;
+        border: 1px solid #DEE2E6 !important;
+        border-radius: 6px !important;
+        padding: 0.5rem 1rem !important;
+        font-weight: 400 !important;
+        width: 100% !important;
+        min-width: 100% !important;
+        max-width: 100% !important;
+        display: block !important;
+        box-sizing: border-box !important;
+        transition: all 0.2s ease !important;
+    }
+    
+    .stButton > button:hover,
+    .stFormSubmitButton > button:hover {
+        background-color: #F8F9FA !important;
+        border-color: #ADB5BD !important;
+    }
+    
+    /* 버튼 컨테이너도 100% 너비로 */
+    .stButton,
+    .stFormSubmitButton {
+        width: 100% !important;
     }
     
     </style>

@@ -1,6 +1,6 @@
 [theme]
 # 깔끔한 라이트 테마 (금융 터미널 스타일)
-primaryColor = "#2C5F8D"        # Slate Blue (차분한 파란색)
+primaryColor = "#6C757D"        # 회색 (버튼 기본 색상)
 backgroundColor = "#FFFFFF"      # 순백색 배경
 secondaryBackgroundColor = "#F5F7FA"  # 연한 회색 배경 (카드, 사이드바)
 textColor = "#1E1E1E"           # 진한 검정 (가독성 최고)

@@ -163,7 +163,7 @@ def main():
              slope_lookback = st.slider("Sell Threshold Lookback (Days)", 20, 120, config.get('slope_lookback', 60), 10, help="Period to calculate Max Up Slope for threshold")
              use_trend_break = st.checkbox("Enable Trend Break Sell (< 20MA)", value=config.get('use_trend_break', True), help="Sell if close price drops below 20-day MA")
         
-        run_btn = st.form_submit_button("Run Simulation", type="primary")
+        run_btn = st.form_submit_button("Run Simulation", type="primary", use_container_width=True)
 
     # 5. Data Management (Outside Form)
     with st.sidebar.expander("Data Management", expanded=False):
@@ -221,7 +221,7 @@ def main():
                 *   **"이건 건전한 조정이 아니라 폭락의 징조다"**라고 판단하여 즉시 매도합니다.
         """)
 
-    if st.sidebar.button("📘 전략 가이드 (상세보기)"):
+    if st.sidebar.button("전략 가이드 (상세보기)", use_container_width=True):
         show_strategy_guide()
 
     # Header

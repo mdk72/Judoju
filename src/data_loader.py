@@ -247,22 +247,45 @@ class DataLoader:
             
         return filtered_dict
 
-    def get_etf_pdf(self, etf_ticker: str):
+    @st.cache_data(ttl=3600) # 1시간 캐싱
+    def get_etf_pdf(_self, etf_ticker: str):
         """
-        ETF의 구성 종목(PDF) 리스트를 가져옵니다.
-        (현재는 Mock 데이터를 반환하며, 추후 KIS API 연동 예정)
+        TIGER ETF 공식 API를 통해 실시간 구성 종목(PDF) 리스트를 가져옵니다.
         """
-        # Mock PDF Data
-        mock_pdf = [
-            {"ticker": "005930", "name": "삼성전자", "weight": 20.5},
-            {"ticker": "000660", "name": "SK하이닉스", "weight": 15.2},
-            {"ticker": "035420", "name": "NAVER", "weight": 8.4},
-            {"ticker": "005380", "name": "현대차", "weight": 7.1},
-            {"ticker": "035720", "name": "카카오", "weight": 6.5},
-            {"ticker": "006400", "name": "삼성SDI", "weight": 5.2},
-            {"ticker": "051910", "name": "LG화학", "weight": 4.8},
-            {"ticker": "000270", "name": "기아", "weight": 4.1},
-            {"ticker": "012330", "name": "현대모비스", "weight": 3.9},
-            {"ticker": "105560", "name": "KB금융", "weight": 3.5}
-        ]
-        return mock_pdf
+        print(f"[DataLoader] ETF PDF 데이터 로드 중 (Ticker: {etf_ticker})...")
+        try:
+            # 미래에셋 TIGER ETF 공식 API
+            url = f"https://www.tigeretf.com/ko/api/etf/pdf.do?etfTicker={etf_ticker}"
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Referer': f'https://www.tigeretf.com/ko/product/view.do?ticker={etf_ticker}'
+            }
+            
+            res = requests.get(url, headers=headers, timeout=10)
+            data = res.json()
+            
+            # API 응답 구조 분석 (data.pdfList 등)
+            pdf_list = data.get('data', {}).get('pdfList', [])
+            if not pdf_list:
+                print(f"[DataLoader] PDF 데이터를 찾을 수 없습니다: {etf_ticker}")
+                return []
+                
+            results = []
+            for item in pdf_list:
+                # 비중(weight)이 0 이상인 종목만 추출
+                weight = float(item.get('weight', 0))
+                if weight > 0:
+                    results.append({
+                        "ticker": item.get('isincode', '').strip()[-6:] if item.get('isincode') else "", # 보통 끝 6자리가 티커
+                        "name": item.get('stkname', '알수없음'),
+                        "weight": round(weight, 2)
+                    })
+            
+            # 비중 순 정렬 및 상위 10개 (UI 호환용)
+            results = sorted(results, key=lambda x: x['weight'], ascending=False)[:10]
+            print(f"[DataLoader] {etf_ticker} PDF 로드 완료 ({len(results)}종목)")
+            return results
+        except Exception as e:
+            print(f"[DataLoader] ETF PDF API 호출 실패: {e}")
+            return []
+```

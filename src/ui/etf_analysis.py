@@ -138,7 +138,15 @@ def render_etf_analysis(data_loader, strategy):
                 "12주": perf.get(12, 0.0)
             })
             
+        if not pdf_results:
+             st.warning("선택한 ETF의 구성 종목 정보를 가져올 수 없습니다. (API 응답 없음)")
+             return
+
         pdf_df = pd.DataFrame(pdf_results)
+        
+        # 컬럼 존재 여부 최종 확인
+        required_cols = ['1주', '2주', '4주', '8주', '12주']
+        existing_cols = [c for c in required_cols if c in pdf_df.columns]
         
         # Heatmap 스타일 적용
         def color_bg(val):
@@ -151,7 +159,7 @@ def render_etf_analysis(data_loader, strategy):
                 return f'background-color: {color}'
             return ''
 
-        st.table(pdf_df.style.applymap(color_bg, subset=['1주', '2주', '4주', '8주', '12주']))
+        st.table(pdf_df.style.applymap(color_bg, subset=existing_cols))
         
         # 비중 차트
         fig = px.pie(pdf_df, values='비중(%)', names='종목', title=f"{selected_etf} 구성 비중",

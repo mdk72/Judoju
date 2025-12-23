@@ -9,8 +9,8 @@ font = "sans serif"
 [server]
 # 파일 감시 비활성화 (Streamlit Cloud에서 권장)
 fileWatcherType = "none"
-# 헤더 메시지 비활성화 및 서버 모드 설정
-headless = false
+# 헤더 메시지 비활성화 및 서버 모드 활성화 (배포 필수 설정)
+headless = true
 enableCORS = false
 enableXsrfProtection = false
 

@@ -10,6 +10,7 @@
     ],
     "start_date": "2017-01-02",
     "end_date": "2025-12-22",
+    "market_mode": "STOCK",
     "kospi_n": 50,
     "kosdaq_n": 10,
     "slope_lookback": 60,

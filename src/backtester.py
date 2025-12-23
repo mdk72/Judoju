@@ -35,11 +35,12 @@ class Backtester:
         백테스트 시작 전 모든 데이터 로드 (속도 향상)
         """
         print("[Backtester] 전체 유니버스 데이터 로딩 시작...")
-        # get_universe_tickers returns a dict {ticker: name}
+        # Tickers extraction based on mode
+        mode = self.universe_params.get('mode', 'STOCK')
         kospi_n = self.universe_params.get('kospi_n', 200)
         kosdaq_n = self.universe_params.get('kosdaq_n', 50)
         
-        tickers_dict = self.loader.get_universe_tickers(kospi_n=kospi_n, kosdaq_n=kosdaq_n)
+        tickers_dict = self.loader.get_universe_tickers(kospi_n=kospi_n, kosdaq_n=kosdaq_n, mode=mode)
         self.universe_names = tickers_dict
         tickers = list(tickers_dict.keys())
         
@@ -175,8 +176,12 @@ class Backtester:
 
                 avg_amount = df_full.at[today, 'Amount_MA20']
                 
+                # Liquidity Threshold based on mode
+                mode = self.universe_params.get('mode', 'STOCK')
+                min_amount = 10_000_000_000 if mode == 'STOCK' else 1_000_000_000
+                
                 # Check for NaN (not enough data) or Low Liquidity
-                if pd.isna(avg_amount) or avg_amount < 10_000_000_000:
+                if pd.isna(avg_amount) or avg_amount < min_amount:
                     continue
                 
                 # 2. RS Score (RS_Score_Pre)

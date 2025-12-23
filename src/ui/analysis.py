@@ -5,12 +5,13 @@ import plotly.graph_objects as go
 from src.data_loader import DataLoader
 from src.strategy import Strategy
 
-def render_analysis(trades, portfolio, start_dt, end_dt, strategy_params, selected_from_table, selected_from_table_name):
+def render_analysis(trades, portfolio, start_dt, end_dt, strategy_params, selected_from_table, selected_from_table_name, loader):
     st.markdown("<br>", unsafe_allow_html=True)
     st.markdown("#### Individual Stock Analysis")
     # st.caption("Select a stock from the menu below or click a row in the Portfolio tab.")
 
     if not trades.empty:
+        # ... (기존 로직 유지)
         # Get list of tickers that were traded
         traded_tickers = trades['Ticker'].unique().tolist()
         
@@ -76,8 +77,7 @@ def render_analysis(trades, portfolio, start_dt, end_dt, strategy_params, select
             selected_ticker = selected_option.split(" | ")[0]
             
             # Load OHLCV Data
-            # Use same date range as configuration for consistency
-            loader = DataLoader(start_date=str(start_dt), end_date=str(end_dt))
+            # Use passed loader from app.py
             df_stock = loader.get_stock_data(selected_ticker)
             
             if df_stock is not None:

@@ -3,7 +3,7 @@ import pandas as pd
 import datetime
 from src.data_loader import DataLoader
 
-def render_portfolio(portfolio, trades, end_dt):
+def render_portfolio(portfolio, trades, end_dt, loader_p):
     st.markdown("<br>", unsafe_allow_html=True)
     st.markdown("#### Current Holdings")
     
@@ -23,8 +23,7 @@ def render_portfolio(portfolio, trades, end_dt):
             p_data = []
             total_p_value = 0
             
-            # To calculate current Profit, fetch latest price
-            loader_p = DataLoader(start_date=str(end_dt), end_date=str(end_dt)) 
+            # Use passed loader instead of creating a new one
             
             for ticker, info in portfolio.items():
                 name = name_map.get(ticker, ticker)

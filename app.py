@@ -21,6 +21,7 @@ from src.ui.overview import render_overview
 from src.ui.portfolio import render_portfolio
 from src.ui.analysis import render_analysis
 from src.ui.logs import render_logs
+from src.ui.etf_analysis import render_etf_analysis
 
 # Initialize DB Manager
 db = DBManager()
@@ -76,6 +77,14 @@ def get_latest_file(pattern):
         return None
     files.sort(key=os.path.getmtime, reverse=True)
     return files[0]
+
+@st.cache_resource
+def get_data_loader(start_date, end_date):
+    return DataLoader(start_date=start_date, end_date=end_date)
+
+@st.cache_resource
+def get_strategy(params):
+    return Strategy(**params)
 
 def run_simulation(start_date, end_date, strategy_params, universe_params):
     """
@@ -136,10 +145,17 @@ def main():
                 st.warning("⚠️ Data source limit: History prior to 2014 may not be available (Max ~3000 trading days).")
 
         # 2. Universe Settings
-        with st.expander("Universe Parameters", expanded=False):
-            st.caption("Market Cap Ranking Filter")
-            kospi_n = st.slider("KOSPI Top N", 50, 500, config.get('kospi_n', 200), 10)
-            kosdaq_n = st.slider("KOSDAQ Top N", 10, 200, config.get('kosdaq_n', 50), 10)
+        with st.expander("Universe Parameters", expanded=True):
+            market_mode = st.radio("Market Mode", ["STOCK", "ETF"], index=0 if config.get('market_mode', 'STOCK') == 'STOCK' else 1, horizontal=True)
+            
+            if market_mode == "STOCK":
+                st.caption("Market Cap Ranking Filter")
+                kospi_n = st.slider("KOSPI Top N", 50, 500, config.get('kospi_n', 200), 10)
+                kosdaq_n = st.slider("KOSDAQ Top N", 10, 200, config.get('kosdaq_n', 50), 10)
+            else:
+                st.info("📊 ETF Mode: TIGER Whitelist (Total 23 items)")
+                kospi_n = 0
+                kosdaq_n = 0
 
         # 3. Strategy Logic
         with st.expander("Strategy Logic", expanded=False):
@@ -242,8 +258,8 @@ def main():
             'sell_slope_mult': sell_slope_mult,
             'weights': [w3, w6, w12, w1],
             'start_date': str(start_dt),
-            'start_date': str(start_dt),
             'end_date': str(end_dt),
+            'market_mode': market_mode,
             'kospi_n': kospi_n,
             'kosdaq_n': kosdaq_n,
             'slope_lookback': slope_lookback,
@@ -261,6 +277,7 @@ def main():
         }
         
         universe_params = {
+            'mode': market_mode,
             'kospi_n': kospi_n,
             'kosdaq_n': kosdaq_n
         }
@@ -289,10 +306,11 @@ def main():
     st.caption(f"Showing Data Source: **{data_source}**")
 
     # Tabs
-    tab_overview, tab_portfolio, tab_analysis, tab_logs = st.tabs([
+    tab_overview, tab_portfolio, tab_analysis, tab_etf, tab_logs = st.tabs([
         "Overview", 
         "Portfolio", 
         "Analysis", 
+        "ETF Analysis",
         "Logs"
     ])
 
@@ -304,7 +322,9 @@ def main():
     sel_ticker = None
     sel_name = None
     with tab_portfolio:
-        sel_ticker, sel_name = render_portfolio(portfolio, trades, end_dt)
+        # Pass cached loader
+        loader_p = get_data_loader(str(start_dt), str(end_dt))
+        sel_ticker, sel_name = render_portfolio(portfolio, trades, end_dt, loader_p)
 
     # 3. Analysis Tab
     with tab_analysis:
@@ -317,9 +337,25 @@ def main():
             'slope_lookback': slope_lookback,
             'use_trend_break': use_trend_break
         }
-        render_analysis(trades, portfolio, start_dt, end_dt, current_strategy_params, sel_ticker, sel_name)
+        # Pass cached loader
+        loader_a = get_data_loader(str(start_dt), str(end_dt))
+        render_analysis(trades, portfolio, start_dt, end_dt, current_strategy_params, sel_ticker, sel_name, loader_a)
 
-    # 4. Logs Tab
+    # 4. ETF Analysis Tab
+    with tab_etf:
+        current_strategy_params = {
+            'ma_short': ma_short,
+            'ma_long': ma_long,
+            'sell_slope_multiplier': sell_slope_mult,
+            'rs_weights': (w3, w6, w12, w1),
+            'slope_lookback': slope_lookback,
+            'use_trend_break': use_trend_break
+        }
+        loader_etf = get_data_loader(str(start_dt), str(end_dt))
+        strategy_etf = get_strategy(current_strategy_params)
+        render_etf_analysis(loader_etf, strategy_etf)
+
+    # 5. Logs Tab
     with tab_logs:
         render_logs(trades)
 

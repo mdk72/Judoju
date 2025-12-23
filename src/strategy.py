@@ -162,3 +162,18 @@ class Strategy:
                  return True, f"Deep Correction (Down:{slope_current:.1f} > Up:{max_up_slope:.1f}*{self.sell_slope_multiplier})"
             
         return False, ""
+
+    def calculate_slopes(self, df: pd.DataFrame, target_date, lookback=60):
+        """
+        특정 날짜 기준의 상승/하락 슬로프를 계산합니다.
+        """
+        if 'Slope_Pct' not in df.columns:
+            self.prepare_indicators(df)
+            
+        try:
+            up_slope = df.at[target_date, 'Slope']
+            slope_pct = df.at[target_date, 'Slope_Pct']
+            max_up = df.at[target_date, 'Max_Slope_60d']
+            return up_slope, slope_pct, max_up
+        except:
+            return 0.0, 0.0, 0.0

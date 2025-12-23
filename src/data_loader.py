@@ -1,6 +1,7 @@
 import FinanceDataReader as fdr
 import pandas as pd
 import streamlit as st
+import requests
 from datetime import datetime, timedelta
 import os
 from .constants import TIGER_ETF_UNIVERSE
@@ -35,41 +36,92 @@ class DataLoader:
 
     @st.cache_data(ttl=86400) # 24시간 캐싱
     def _get_cached_stock_universe(_self, kospi_n, kosdaq_n):
-        df_kospi = fdr.StockListing('KOSPI')
-        if 'Marcap' in df_kospi.columns:
-            df_kospi['Marcap'] = pd.to_numeric(df_kospi['Marcap'], errors='coerce')
-            df_kospi = df_kospi.sort_values(by='Marcap', ascending=False)
-            top_kospi = df_kospi.head(kospi_n)['Code'].tolist()
-        else:
-            top_kospi = df_kospi.head(kospi_n)['Code'].tolist()
-
-        # KOSDAQ
-        df_kosdaq = fdr.StockListing('KOSDAQ')
-        if 'Marcap' in df_kosdaq.columns:
-            df_kosdaq['Marcap'] = pd.to_numeric(df_kosdaq['Marcap'], errors='coerce')
-            df_kosdaq = df_kosdaq.sort_values(by='Marcap', ascending=False)
-            top_kosdaq = df_kosdaq.head(kosdaq_n)['Code'].tolist()
-        else:
-            top_kosdaq = df_kosdaq.head(kosdaq_n)['Code'].tolist()
-
-        universe_dict = {} 
+        universe_dict = {}
         
-        if 'Name' in df_kospi.columns:
-             for _, row in df_kospi.head(kospi_n).iterrows():
-                 universe_dict[row['Code']] = row['Name']
-        else:
-             for code in top_kospi:
-                 universe_dict[code] = code
+        # 1. KOSPI
+        try:
+            df_kospi = fdr.StockListing('KOSPI')
+            print("[DataLoader] FDR KOSPI Listing 성공")
+        except Exception as e:
+            print(f"[DataLoader] FDR KOSPI 실패: {e}. Naver Fallback 가동.")
+            df_kospi = _self._get_naver_listing(sosok=0) # 0: KOSPI
+            if df_kospi is None:
+                 print("[DataLoader] Naver Fallback(KOSPI) 실패")
+                 df_kospi = pd.DataFrame()
 
-        if 'Name' in df_kosdaq.columns:
-             for _, row in df_kosdaq.head(kosdaq_n).iterrows():
-                 universe_dict[row['Code']] = row['Name']
-        else:
-             for code in top_kosdaq:
-                 universe_dict[code] = code
+        if not df_kospi.empty:
+            if 'Marcap' in df_kospi.columns:
+                df_kospi['Marcap'] = pd.to_numeric(df_kospi['Marcap'], errors='coerce')
+                df_kospi = df_kospi.sort_values(by='Marcap', ascending=False)
+            
+            for _, row in df_kospi.head(kospi_n).iterrows():
+                code = row.get('Code', row.get('Symbol'))
+                name = row.get('Name')
+                if code and name: universe_dict[code] = name
 
-        print(f"[DataLoader] 1차 선정된 개별종목 유니버스 크기: {len(universe_dict)}종목")
+        # 2. KOSDAQ
+        try:
+            df_kosdaq = fdr.StockListing('KOSDAQ')
+            print("[DataLoader] FDR KOSDAQ Listing 성공")
+        except Exception as e:
+            print(f"[DataLoader] FDR KOSDAQ 실패: {e}. Naver Fallback 가동.")
+            df_kosdaq = _self._get_naver_listing(sosok=1) # 1: KOSDAQ
+            if df_kosdaq is None:
+                 print("[DataLoader] Naver Fallback(KOSDAQ) 실패")
+                 df_kosdaq = pd.DataFrame()
+
+        if not df_kosdaq.empty:
+            if 'Marcap' in df_kosdaq.columns:
+                df_kosdaq['Marcap'] = pd.to_numeric(df_kosdaq['Marcap'], errors='coerce')
+                df_kosdaq = df_kosdaq.sort_values(by='Marcap', ascending=False)
+            
+            for _, row in df_kosdaq.head(kosdaq_n).iterrows():
+                code = row.get('Code', row.get('Symbol'))
+                name = row.get('Name')
+                if code and name: universe_dict[code] = name
+
+        print(f"[DataLoader] 최종 선정된 개별종목 유니버스 크기: {len(universe_dict)}종목")
         return universe_dict
+
+    def _get_naver_listing(self, sosok=0):
+        """
+        KRX API 차단 시 Naver Finance 시가총액 페이지에서 리스팅을 가져옵니다.
+        :param sosok: 0 (KOSPI), 1 (KOSDAQ)
+        """
+        try:
+            url = f"https://finance.naver.com/sise/sise_market_sum.naver?sosok={sosok}&page=1"
+            # Naver는 브라우저 User-Agent가 필요함
+            headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'}
+            
+            # pandas.read_html은 가끔 불안정하므로 requests + BeautifulSoup 스타일로 필요한 컬럼만 추출
+            from bs4 import BeautifulSoup
+            res = requests.get(url, headers=headers, timeout=10)
+            soup = BeautifulSoup(res.text, 'html.parser')
+            
+            table = soup.find('table', {'class': 'type_2'})
+            if not table: return None
+            
+            stocks = []
+            for tr in table.find_all('tr'):
+                anchors = tr.find_all('a', {'class': 'tltle'})
+                if anchors:
+                    name = anchors[0].text
+                    href = anchors[0]['href']
+                    code = href.split('code=')[-1].strip()
+                    
+                    # 시총 값 추출 (단위: 억)
+                    tds = tr.find_all('td', {'class': 'number'})
+                    marcap = 0
+                    if len(tds) >= 2:
+                        marcap_str = tds[1].text.replace(',', '').strip()
+                        marcap = int(marcap_str) * 100_000_000 if marcap_str.isdigit() else 0
+                    
+                    stocks.append({'Code': code, 'Name': name, 'Marcap': marcap})
+            
+            return pd.DataFrame(stocks)
+        except Exception as e:
+            print(f"[DataLoader] Naver Listing Error: {e}")
+            return None
 
     def get_etf_universe(self):
         """

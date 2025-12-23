@@ -17,6 +17,7 @@ yfinance>=0.2.32
 
 # Utilities
 requests>=2.31.0
+beautifulsoup4>=4.12.0
 python-dotenv>=1.0.0
 
 # Database

@@ -288,4 +288,3 @@ class DataLoader:
         except Exception as e:
             print(f"[DataLoader] ETF PDF API 호출 실패: {e}")
             return []
-```
